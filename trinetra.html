@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Trinetra</title>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap" rel="stylesheet">
+</head>
+<style>
+  body{
+    margin:0;
+    font-family: 'Ubuntu', sans-serif;
+  }
+  div{
+    margin:50px auto;
+    width:240px;
+  }
+  input{
+    font-size: 20px;
+  }
+  #state{
+    font-size: 25px;
+    color:#504848;
+  }
+  #freshness{
+    font-size: 22px;
+    color:green;
+  }
+  #adulteration{
+    font-size: 22px;
+    color:red;
+  }
+  #remedies{
+    font-size: 22px;
+    color:blue;
+  }
+  #abc{
+    display: none;
+  }
+  p{
+    font-size: 22px;
+    color: black;
+    border: darkgray 2px solid;
+    text-align: center;
+    padding: 3px;
+  }
+</style>
+<body>
+  <script>
+
+    function readImage(element) {
+    var file = element.files[0];
+    var reader = new FileReader();
+    reader.onloadend = function() {
+      $.ajax({
+        url: "https://centralindia.api.cognitive.microsoft.com/customvision/v3.0/Prediction/78e8dafe-3d62-402c-bb60-86c0a1d66adb/classify/iterations/BananaTesting/image",
+        data: reader.result,
+        processData: false,
+        contentType: "application/octet-stream",
+        headers: {
+          'Prediction-key': '6e0a1c93b5e943e2970ee15e3a7261b6'
+        },
+        type: 'POST',
+        success: function(response) {
+          if(response["predictions"][0]["tagName"]=="fresh")
+          {
+            var result1 = parseFloat(response["predictions"][0]["probability"]*100).toFixed(3);
+            var result2 = parseFloat(response["predictions"][1]["probability"]*100).toFixed(3);
+          }
+          else
+          {
+            var result2 = parseFloat(response["predictions"][0]["probability"]*100).toFixed(3);
+            var result1 = parseFloat(response["predictions"][1]["probability"]*100).toFixed(3);
+          }
+
+          let form=document.getElementById('input-image');
+          form.style.visibility="hidden";
+
+          let res=document.getElementById("result");
+          if(parseInt(result1)>75)
+            res.innerHTML="Consumable";
+          else if(parseInt(result1)>50 || parseInt(result2)<50){
+            let abc=document.getElementById('abc');
+            abc.style.display="block";
+            res.innerHTML="Consumable but with remedies";
+            let remedy=document.getElementById("remedy");
+            remedy.innerHTML="1. Wait for a day to eat";
+          }
+          else {
+            res.innerHTML="Non-Consumable";
+          }
+
+          let res1=document.getElementById("result1");
+          res1.innerHTML=result1+" %";
+
+          let res2=document.getElementById("result2");
+          res2.innerHTML=result2+" %";
+
+        },
+        error: function(error) {
+          alert('error: ' + error);
+        }
+      });
+    }
+    reader.readAsArrayBuffer(file);
+    }
+  </script>
+  <div>
+
+    <form id="input-image">
+      <input type="file" onchange="readImage(this)" />
+    </form>
+
+    <h3 id="state">State:</h3>
+    <p id="result">____________________</p>
+
+    <h3 id="freshness">Freshness:</h3>
+    <p id="result1">____________________</p>
+
+    <h3 id="adulteration">Adulteration:</h3>
+    <p id="result2">____________________</p>
+
+    <div id="abc">
+      <h3 id="remedies">Remedies:</h3>
+      <p id="remedy"></p>
+    </div>
+  </div>
+</body>
+</html>
